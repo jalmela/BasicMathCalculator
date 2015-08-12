@@ -6,6 +6,7 @@ The available operations are:
 - subtraction.
 - Division.
 - multiplication.
+
 Also you can convert a number in 10-base to a binary. This operation will be performed by the server.
 The server will store the conversion number request’s in the input number and the result in the Google app engine’s dataStore throught JPA or JDO. You can visualized the data store in your web browser.
 You can view the application running in Google App engine [here](http://linktoapp.org).
