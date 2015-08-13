@@ -19,6 +19,9 @@
 
   <!-- Other module inherits                                      -->
 
+  <!--   custom css file 										  -->
+  <stylesheet src='/BasicMathCalculator.css' />
+ 
   <!-- Specify the app entry point class.                         -->
   <entry-point class='es.josealmela.BasicMathCalculator.client.BasicMathCalculator'/>
 

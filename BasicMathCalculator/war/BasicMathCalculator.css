@@ -8,6 +8,7 @@ h1 {
   color: #777777;
   margin: 40px 0px 70px;
   text-align: center;
+  border: 1px solid red;
 }
 
 .sendButton {
