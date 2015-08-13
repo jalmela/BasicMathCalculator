@@ -1,6 +1,7 @@
 package es.josealmela.BasicMathCalculator.client;
 
 import es.josealmela.BasicMathCalculator.shared.FieldVerifier;
+
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -16,6 +17,10 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
+import com.sencha.gxt.widget.core.client.box.MessageBox;
+import com.sencha.gxt.widget.core.client.button.TextButton;
+import com.sencha.gxt.widget.core.client.event.SelectEvent;
+import com.sencha.gxt.widget.core.client.event.SelectEvent.SelectHandler;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -38,11 +43,21 @@ public class BasicMathCalculator implements EntryPoint {
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {
-    final Button sendButton = new Button("Send");
+    final Button sendButton = new Button("Send This too");
     final TextBox nameField = new TextBox();
     nameField.setText("GWT User");
     final Label errorLabel = new Label();
-
+    TextButton textButton = new TextButton("Verify GXT works");
+    RootPanel.get().add(textButton);
+    textButton.addSelectHandler(new SelectHandler() {
+      //@Override
+      public void onSelect(SelectEvent event) {
+        MessageBox messageBox = new MessageBox("GXT Works.");
+        messageBox.show();	
+      }
+    });
+    
+    
     // We can add style names to widgets
     sendButton.addStyleName("sendButton");
 
