@@ -10,17 +10,14 @@ import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.DialogBox;
-import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.VerticalPanel;
-import com.sencha.gxt.widget.core.client.box.MessageBox;
+import com.sencha.gxt.widget.core.client.box.AlertMessageBox;
 import com.sencha.gxt.widget.core.client.button.TextButton;
 import com.sencha.gxt.widget.core.client.event.SelectEvent;
 import com.sencha.gxt.widget.core.client.event.SelectEvent.SelectHandler;
+import com.sencha.gxt.widget.core.client.form.TextField;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -35,77 +32,37 @@ public class BasicMathCalculator implements EntryPoint {
 			+ "connection and try again.";
 
 	/**
-	 * Create a remote service proxy to talk to the server-side Greeting service.
+	 * Create a remote service proxy to talk to the server-side convert number service.
 	 */
-	private final GreetingServiceAsync greetingService = (GreetingServiceAsync) GWT.create(GreetingService.class);
+	private final ConverNumberServiceAsync convertNumberService = (ConverNumberServiceAsync) GWT.create(ConverNumberService.class);
 
 	/**
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {
-    final Button sendButton = new Button("Send This too");
-    final TextBox nameField = new TextBox();
-    nameField.setText("GWT User");
-    final Label errorLabel = new Label();
-    TextButton textButton = new TextButton("Verify GXT works");
-    RootPanel.get().add(textButton);
-    textButton.addSelectHandler(new SelectHandler() {
-      //@Override
-      public void onSelect(SelectEvent event) {
-        MessageBox messageBox = new MessageBox("GXT Works.");
-        messageBox.show();	
-      }
-    });
+    final TextButton convertNumberButton = new TextButton("Convert to binary");
+    final TextField calcOpField = new TextField();
+   
+    final Label errorLabel = new Label();   
+    calcOpField.setText("Enter basic op");
+    convertNumberButton.setId("convertNumberOp");
+    convertNumberButton.setStyleName("opButton", true);
     
-    
-    // We can add style names to widgets
-    sendButton.addStyleName("sendButton");
-
-    // Add the nameField and sendButton to the RootPanel
-    // Use RootPanel.get() to get the entire body element
-    RootPanel.get("nameFieldContainer").add(nameField);
-    RootPanel.get("sendButtonContainer").add(sendButton);
+    RootPanel.get("nameFieldContainer").add(calcOpField);
+    RootPanel.get("sendButtonContainer").add(convertNumberButton);
     RootPanel.get("errorLabelContainer").add(errorLabel);
 
     // Focus the cursor on the name field when the app loads
-    nameField.setFocus(true);
-    nameField.selectAll();
+    calcOpField.focus();
+    calcOpField.selectAll();
 
-    // Create the popup dialog box
-    final DialogBox dialogBox = new DialogBox();
-    dialogBox.setText("Remote Procedure Call");
-    dialogBox.setAnimationEnabled(true);
-    final Button closeButton = new Button("Close");
-    // We can set the id of a widget by accessing its Element
-    closeButton.getElement().setId("closeButton");
-    final Label textToServerLabel = new Label();
-    final HTML serverResponseLabel = new HTML();
-    VerticalPanel dialogVPanel = new VerticalPanel();
-    dialogVPanel.addStyleName("dialogVPanel");
-    dialogVPanel.add(new HTML("<b>Sending name to the server:</b>"));
-    dialogVPanel.add(textToServerLabel);
-    dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-    dialogVPanel.add(serverResponseLabel);
-    dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);
-    dialogVPanel.add(closeButton);
-    dialogBox.setWidget(dialogVPanel);
-
-    // Add a handler to close the DialogBox
-    closeButton.addClickHandler(new ClickHandler() {
-      public void onClick(ClickEvent event) {
-        dialogBox.hide();
-        sendButton.setEnabled(true);
-        sendButton.setFocus(true);
-      }
-    });
-
-    // Create a handler for the sendButton and nameField
-    class MyHandler implements ClickHandler, KeyUpHandler {
+    // Create a handler for the operations in the client side.
+    class MyCalcHandlers implements ClickHandler, KeyUpHandler, SelectHandler {
       /**
        * Fired when the user clicks on the sendButton.
        */
       public void onClick(ClickEvent event) {
-        sendNameToServer();
+        
       }
 
       /**
@@ -113,50 +70,49 @@ public class BasicMathCalculator implements EntryPoint {
        */
       public void onKeyUp(KeyUpEvent event) {
         if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
-          sendNameToServer();
+          sendNumberToServer();
         }
       }
 
       /**
        * Send the name from the nameField to the server and wait for a response.
        */
-      private void sendNameToServer() {
+      private void sendNumberToServer() {
         // First, we validate the input.
         errorLabel.setText("");
-        String textToServer = nameField.getText();
-        if (!FieldVerifier.isValidName(textToServer)) {
-          errorLabel.setText("Please enter at least four characters");
+        String textToServer = calcOpField.getText();
+        if (!FieldVerifier.isValidNumber(textToServer)) {
+          errorLabel.setText("Please enter a positive integer number.");
           return;
         }
         
         // Then, we send the input to the server.
-        sendButton.setEnabled(false);
-        textToServerLabel.setText(textToServer);
-        serverResponseLabel.setText("");
-        greetingService.greetServer(textToServer, new AsyncCallback<String>() {
+        convertNumberButton.setEnabled(false);
+        convertNumberService.convertNumbertServer(textToServer, new AsyncCallback<String>() {
           public void onFailure(Throwable caught) {
             // Show the RPC error message to the user
-            dialogBox.setText("Remote Procedure Call - Failure");
-            serverResponseLabel.addStyleName("serverResponseLabelError");
-            serverResponseLabel.setHTML(SERVER_ERROR);
-            dialogBox.center();
-            closeButton.setFocus(true);
+        	  AlertMessageBox messageBox = new AlertMessageBox("An error ocurred",SERVER_ERROR);    	
+              messageBox.show();
+              messageBox.center();
+              convertNumberButton.setEnabled(true);        
           }
 
-          public void onSuccess(String result) {
-            dialogBox.setText("Remote Procedure Call");
-            serverResponseLabel.removeStyleName("serverResponseLabelError");
-            serverResponseLabel.setHTML(result);
-            dialogBox.center();
-            closeButton.setFocus(true);
+          public void onSuccess(String result) {          
+            calcOpField.setText(result);
+            convertNumberButton.setEnabled(true);
           }
         });
       }
+
+	public void onSelect(SelectEvent event) {
+		sendNumberToServer();
+		
+	}
     }
 
-    // Add a handler to send the name to the server
-    MyHandler handler = new MyHandler();
-    sendButton.addClickHandler(handler);
-    nameField.addKeyUpHandler(handler);
+    // Add a handler to send the number to the server
+    MyCalcHandlers handler = new MyCalcHandlers();
+    convertNumberButton.addSelectHandler((SelectHandler) handler);
+    calcOpField.addKeyUpHandler(handler);
   }
 }

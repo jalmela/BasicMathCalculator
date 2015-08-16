@@ -2,7 +2,7 @@ package es.josealmela.BasicMathCalculator.shared;
 
 /**
  * <p>
- * FieldVerifier validates that the name the user enters is valid.
+ * FieldVerifier validates that the number the user enters is valid.
  * </p>
  * <p>
  * This class is in the <code>shared</code> package because we use it in both
@@ -25,18 +25,22 @@ public class FieldVerifier {
 	/**
 	 * Verifies that the specified name is valid for our service.
 	 * 
-	 * In this example, we only require that the name is at least four
-	 * characters. In your application, you can use more complex checks to ensure
-	 * that usernames, passwords, email addresses, URLs, and other fields have the
-	 * proper syntax.
-	 * 
-	 * @param name the name to validate
+	 * @param number10 the name to validate
 	 * @return true if valid, false if invalid
 	 */
-	public static boolean isValidName(String name) {
-		if (name == null) {
+	public static boolean isValidNumber(String number10) {
+		int auxInt = -1;
+		if (number10 == null) {
 			return false;
 		}
-		return name.length() > 3;
+		else {
+			try {
+				auxInt = Integer.parseInt(number10);
+			} catch (Exception e) {
+				return false;
+			}
+			if(auxInt < 0) return false;		
+		}
+		return true;
 	}
 }
