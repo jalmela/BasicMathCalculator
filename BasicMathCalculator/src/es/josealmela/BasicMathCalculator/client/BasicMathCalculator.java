@@ -142,7 +142,7 @@ public class BasicMathCalculator implements EntryPoint {
 	 */
 	public void onModuleLoad() {
 		MyCalcHandlers calcHandler = new MyCalcHandlers();
-		String implentedOp[] = {"X", "+", "-", "/", "C", "CE", "+/-"};
+		String implentedOp[] = {"C", "CE","X", "+", "-", "/","%",  "+/-"};
 		final BorderLayoutContainer borderLayoutContainer = new BorderLayoutContainer();
 		FlexTable table = new FlexTable();
 		ContentPanel cpNorth = new ContentPanel();
