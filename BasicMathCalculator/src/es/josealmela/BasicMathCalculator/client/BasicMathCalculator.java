@@ -42,10 +42,11 @@ public class BasicMathCalculator implements EntryPoint {
 	final TextButton convertNumberButton = new TextButton("Convert to binary");
 	final TextField calcOpField = new TextField();
 	final Label errorLabel = new Label();
+	final Label debugInfo = new Label();
 	public String firstOperand;
 	public String secondOperand;
 	public String operator;
-
+	private boolean isShowingPrevResult = false;
 	String buttonsOp[] = { "C", "CE", "X", "+", "-", "/", "%", "+/-", "=" };
 	String implementedOp[] = { "X", "+", "-", "/", "%" };
 
@@ -88,6 +89,7 @@ public class BasicMathCalculator implements EntryPoint {
 	}
 
 	private void setDisplay(String number) {
+		isShowingPrevResult = false;
 		this.calcOpField.setText(number);
 	}
 
@@ -204,19 +206,20 @@ public class BasicMathCalculator implements EntryPoint {
 				if (isSetFirstOp() && isSetOperator() && isNumeric(getDisplay())) {
 					secondOperand = getDisplay();
 					setDisplay(String.valueOf(evaluateExpresion()));
-					operator = null;
-					secondOperand = null;
-					firstOperand = null;
-
+					resetCurrentOp();
+					isShowingPrevResult = true;
 				}
 
 			} else if (txt.equals(".")) {
+				//Always preserve the display
+				isShowingPrevResult = false;
 				if (getDisplay().equals(""))
 					setDisplay("0.");
 				else if (!getDisplay().contains("."))
 					appendToDisplay(".");
 			} else if (Character.isDigit(txt.charAt(0))) {
-				appendToDisplay(txt);
+				if(isShowingPrevResult) {setDisplay(txt);}
+				else appendToDisplay(txt);
 			} else {
 
 				if (isAnImplementedOperation(txt) && isNumeric(getDisplay()) && isSetFirstOp()) {
@@ -224,6 +227,7 @@ public class BasicMathCalculator implements EntryPoint {
 					operator = txt;
 					acumulateInfirstOp();
 					clearDisplay();
+					
 
 				} else if (isAnImplementedOperation(txt) && isNumeric(getDisplay())) {
 					firstOperand = getDisplay();
@@ -232,9 +236,8 @@ public class BasicMathCalculator implements EntryPoint {
 				}
 
 			}
-			errorLabel.setText("ACTION: " + txt + " op1: " + firstOperand + " op2: " + secondOperand + " operation: "
+			debugInfo.setText("ACTION: " + txt + " op1: " + firstOperand + " op2: " + secondOperand + " operation: "
 					+ operator + "isNumericDisplay: " + isNumeric(getDisplay()));
-
 		}
 	}
 
@@ -314,6 +317,7 @@ public class BasicMathCalculator implements EntryPoint {
 		v.add(borderLayoutContainer);
 
 		RootPanel.get("errorLabelContainer").add(errorLabel);
+		RootPanel.get("errorLabelContainer").add(debugInfo);
 		RootPanel.get("calcContainer").add(v);
 
 		// Add a handler to send the number to the server
