@@ -3,6 +3,7 @@ package es.josealmela.BasicMathCalculator.client;
 import java.util.Arrays;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Label;
@@ -52,23 +53,11 @@ public class BasicMathCalculator implements EntryPoint {
 
 	public static boolean isNumeric(String str) {
 		try {
-			double d = Double.parseDouble(str);
+			Double.parseDouble(str);
 		} catch (NumberFormatException nfe) {
 			return false;
 		}
 		return true;
-	}
-
-	private void clearFirstOp() {
-		this.firstOperand = null;
-	}
-
-	private void clearSecondOp() {
-		this.secondOperand = null;
-	}
-
-	private boolean isSetSecondOp() {
-		return (this.secondOperand != null && !this.secondOperand.isEmpty());
 	}
 
 	private void resetCurrentOp() {
@@ -317,7 +306,7 @@ public class BasicMathCalculator implements EntryPoint {
 		v.add(borderLayoutContainer);
 
 		RootPanel.get("errorLabelContainer").add(errorLabel);
-		RootPanel.get("errorLabelContainer").add(debugInfo);
+		if(Window.Location.getParameter("debug") == "1") RootPanel.get("errorLabelContainer").add(debugInfo);
 		RootPanel.get("calcContainer").add(v);
 
 		// Add a handler to send the number to the server
