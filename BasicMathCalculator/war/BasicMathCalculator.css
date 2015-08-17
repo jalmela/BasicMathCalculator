@@ -8,6 +8,7 @@ h1 {
   color: #777777;
   margin: 40px 0px 70px;
   text-align: center;
+  border: 1px solid red;
 }
 
 .sendButton {
@@ -20,15 +21,12 @@ h1 {
   width: 400px;
 }
 
-.dialogVPanel {
-  margin: 5px;
-}
-
 .serverResponseLabelError {
   color: red;
 }
 
-/** Set ids using widget.getElement().setId("idOfElement") */
-#closeButton {
-  margin: 15px 6px 6px;
+table {
+	max-width: 100px;
+	max-height: 150px;
+	font-size:1.4em;	
 }

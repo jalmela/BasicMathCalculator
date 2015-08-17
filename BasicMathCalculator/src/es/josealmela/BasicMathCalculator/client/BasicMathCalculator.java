@@ -1,21 +1,26 @@
 package es.josealmela.BasicMathCalculator.client;
 
-import es.josealmela.BasicMathCalculator.shared.FieldVerifier;
+import java.util.Arrays;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.dom.client.KeyCodes;
-import com.google.gwt.event.dom.client.KeyUpEvent;
-import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.DialogBox;
-import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.VerticalPanel;
+import com.sencha.gxt.core.client.util.Margins;
+import com.sencha.gxt.widget.core.client.ContentPanel;
+import com.sencha.gxt.widget.core.client.box.AlertMessageBox;
+import com.sencha.gxt.widget.core.client.button.TextButton;
+import com.sencha.gxt.widget.core.client.container.BorderLayoutContainer;
+import com.sencha.gxt.widget.core.client.container.BorderLayoutContainer.BorderLayoutData;
+import com.sencha.gxt.widget.core.client.container.VerticalLayoutContainer;
+import com.sencha.gxt.widget.core.client.container.VerticalLayoutContainer.VerticalLayoutData;
+import com.sencha.gxt.widget.core.client.container.Viewport;
+import com.sencha.gxt.widget.core.client.event.SelectEvent;
+import com.sencha.gxt.widget.core.client.event.SelectEvent.SelectHandler;
+import com.sencha.gxt.widget.core.client.form.TextField;
+import es.josealmela.BasicMathCalculator.shared.FieldVerifier;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -26,122 +31,286 @@ public class BasicMathCalculator implements EntryPoint {
 	 * returns an error.
 	 */
 	private static final String SERVER_ERROR = "An error occurred while "
-			+ "attempting to contact the server. Please check your network "
-			+ "connection and try again.";
+			+ "attempting to contact the server. Please check your network " + "connection and try again.";
 
 	/**
-	 * Create a remote service proxy to talk to the server-side Greeting service.
+	 * Create a remote service proxy to talk to the server-side convert number
+	 * service.
 	 */
-	private final GreetingServiceAsync greetingService = (GreetingServiceAsync) GWT.create(GreetingService.class);
+	private final ConverNumberServiceAsync convertNumberService = (ConverNumberServiceAsync) GWT
+			.create(ConverNumberService.class);
+
+	final TextButton convertNumberButton = new TextButton("Convert to binary");
+	final TextField calcOpField = new TextField();
+	final Label errorLabel = new Label();
+	final Label debugInfo = new Label();
+	public String firstOperand;
+	public String secondOperand;
+	public String operator;
+	private boolean isShowingPrevResult = false;
+	String buttonsOp[] = { "C", "CE", "X", "+", "-", "/", "%", "+/-", "=" };
+	String implementedOp[] = { "X", "+", "-", "/", "%" };
+
+	public static boolean isNumeric(String str) {
+		try {
+			Double.parseDouble(str);
+		} catch (NumberFormatException nfe) {
+			return false;
+		}
+		return true;
+	}
+
+	private void resetCurrentOp() {
+		this.firstOperand = this.secondOperand = this.operator = null;
+	}
+
+	private boolean isSetFirstOp() {
+		return (this.firstOperand != null && !this.firstOperand.isEmpty());
+	}
+
+	private boolean isSetOperator() {
+		return (this.operator != null && !this.operator.isEmpty());
+
+	}
+
+	private void clearDisplay() {
+		this.calcOpField.setText("");
+	}
+
+	private void setDisplay(String number) {
+		isShowingPrevResult = false;
+		this.calcOpField.setText(number);
+	}
+
+	private String getDisplay() {
+		return this.calcOpField.getText();
+	}
+
+	private void appendToDisplay(String number) {
+		this.calcOpField.setText(this.calcOpField.getText() + number);
+	}
+
+	private boolean isAnImplementedOperation(String opeator) {
+		return Arrays.asList(this.implementedOp).contains(opeator);
+	}
+
+	private void showMessage(String title, String body) {
+		AlertMessageBox messageBox = new AlertMessageBox(title, body);
+		messageBox.show();
+		messageBox.center();
+	}
+
+	/**
+	 * Evaluate the operation stored in the calculator fields.
+	 * 
+	 * @return The operation result.
+	 */
+	private float evaluateExpresion() {
+		float op1 = Float.parseFloat(firstOperand);
+		float op2 = Float.parseFloat(secondOperand);
+		float result = -1;
+
+		if (operator.equals("+")) {
+			result = op1 + op2;
+		} else if (operator.equals("-")) {
+			result = op1 - op2;
+		} else if (operator.equals("X")) {
+			result = op1 * op2;
+		} else if (operator.equals("/")) {
+			result = op1 / op2;
+		} else if (operator.equals("%")) {
+			result = op1 % op2;
+		} else {
+			// throw new InvalidParameterException("Unknow operation");
+			showMessage("Unknown operation", "The operator " + operator + " is not implemented");
+		}
+		return result;
+	}
+
+	/**
+	 * Do the operation stored in the op field and store the result in the first
+	 * operand.
+	 * 
+	 * @return the operation's result.
+	 */
+	private float acumulateInfirstOp() {
+		float res = evaluateExpresion();
+		secondOperand = null;
+		firstOperand = String.valueOf(res);
+		return res;
+	}
+
+	// Create a handler for the operations in the client side.
+	class MyCalcHandlers implements SelectHandler {
+
+		/**
+		 * Send the name from the nameField to the server and wait for a
+		 * response.
+		 */
+		private void sendNumberToServer() {
+			// First, we validate the input.
+			errorLabel.setText("");
+			String textToServer = calcOpField.getText();
+			if (!FieldVerifier.isValidNumber(textToServer)) {
+				errorLabel.setText("Please enter a positive integer number.");
+				return;
+			}
+
+			// Then, we send the input to the server.
+			convertNumberButton.setEnabled(false);
+			convertNumberService.convertNumbertServer(textToServer, new AsyncCallback<String>() {
+				public void onFailure(Throwable caught) {
+					// Show the RPC error message to the user
+					showMessage("An error ocurred", SERVER_ERROR);
+					convertNumberButton.setEnabled(true);
+				}
+
+				public void onSuccess(String result) {
+					calcOpField.setText(result);
+					convertNumberButton.setEnabled(true);
+				}
+			});
+		}
+
+		public void onSelect(SelectEvent event) {
+			TextButton btn = (TextButton) event.getSource();
+			String txt = btn.getText();
+			if (txt.equals("Convert to binary")) {
+				if (!getDisplay().equals(""))
+					sendNumberToServer();
+			} else if (txt.equals("C")) {
+				resetCurrentOp();
+				clearDisplay();
+			} else if (txt.equals("CE")) {
+
+				clearDisplay();
+
+			} else if (txt.equals("+/-")) {
+				if (getDisplay().equals("") || getDisplay().charAt(0) != '-')
+					setDisplay("-" + getDisplay());
+				else
+					setDisplay(getDisplay().replace("-", ""));
+			} else if (txt.equals("=")) {
+
+				if (isSetFirstOp() && isSetOperator() && isNumeric(getDisplay())) {
+					secondOperand = getDisplay();
+					setDisplay(String.valueOf(evaluateExpresion()));
+					resetCurrentOp();
+					isShowingPrevResult = true;
+				}
+
+			} else if (txt.equals(".")) {
+				//Always preserve the display
+				isShowingPrevResult = false;
+				if (getDisplay().equals(""))
+					setDisplay("0.");
+				else if (!getDisplay().contains("."))
+					appendToDisplay(".");
+			} else if (Character.isDigit(txt.charAt(0))) {
+				if(isShowingPrevResult) {setDisplay(txt);}
+				else appendToDisplay(txt);
+			} else {
+
+				if (isAnImplementedOperation(txt) && isNumeric(getDisplay()) && isSetFirstOp()) {
+					secondOperand = getDisplay();
+					operator = txt;
+					acumulateInfirstOp();
+					clearDisplay();
+					
+
+				} else if (isAnImplementedOperation(txt) && isNumeric(getDisplay())) {
+					firstOperand = getDisplay();
+					operator = txt;
+					clearDisplay();
+				}
+
+			}
+			debugInfo.setText("ACTION: " + txt + " op1: " + firstOperand + " op2: " + secondOperand + " operation: "
+					+ operator + "isNumericDisplay: " + isNumeric(getDisplay()));
+		}
+	}
 
 	/**
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {
-    final Button sendButton = new Button("Send");
-    final TextBox nameField = new TextBox();
-    nameField.setText("GWT User");
-    final Label errorLabel = new Label();
+		MyCalcHandlers calcHandler = new MyCalcHandlers();
 
-    // We can add style names to widgets
-    sendButton.addStyleName("sendButton");
+		final BorderLayoutContainer borderLayoutContainer = new BorderLayoutContainer();
+		FlexTable tableNumbers = new FlexTable();
+		ContentPanel cpNorth = new ContentPanel();
+		ContentPanel cpWest = new ContentPanel();
+		ContentPanel cpCenter = new ContentPanel();
 
-    // Add the nameField and sendButton to the RootPanel
-    // Use RootPanel.get() to get the entire body element
-    RootPanel.get("nameFieldContainer").add(nameField);
-    RootPanel.get("sendButtonContainer").add(sendButton);
-    RootPanel.get("errorLabelContainer").add(errorLabel);
+		calcOpField.setReadOnly(true);
+		convertNumberButton.setId("convertNumberOp");
 
-    // Focus the cursor on the name field when the app loads
-    nameField.setFocus(true);
-    nameField.selectAll();
+		// North panel
+		BorderLayoutData northBorderLayOutData = new BorderLayoutData(.03);
 
-    // Create the popup dialog box
-    final DialogBox dialogBox = new DialogBox();
-    dialogBox.setText("Remote Procedure Call");
-    dialogBox.setAnimationEnabled(true);
-    final Button closeButton = new Button("Close");
-    // We can set the id of a widget by accessing its Element
-    closeButton.getElement().setId("closeButton");
-    final Label textToServerLabel = new Label();
-    final HTML serverResponseLabel = new HTML();
-    VerticalPanel dialogVPanel = new VerticalPanel();
-    dialogVPanel.addStyleName("dialogVPanel");
-    dialogVPanel.add(new HTML("<b>Sending name to the server:</b>"));
-    dialogVPanel.add(textToServerLabel);
-    dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-    dialogVPanel.add(serverResponseLabel);
-    dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);
-    dialogVPanel.add(closeButton);
-    dialogBox.setWidget(dialogVPanel);
+		cpNorth.setHeadingText("Result");
+		cpNorth.setHeaderVisible(false);
+		cpNorth.add(calcOpField);
 
-    // Add a handler to close the DialogBox
-    closeButton.addClickHandler(new ClickHandler() {
-      public void onClick(ClickEvent event) {
-        dialogBox.hide();
-        sendButton.setEnabled(true);
-        sendButton.setFocus(true);
-      }
-    });
+		// northBorderLayOutData.setMargins(new Margins(0, 5, 0, 0));
+		northBorderLayOutData.setCollapsible(false);
+		northBorderLayOutData.setSplit(false);
 
-    // Create a handler for the sendButton and nameField
-    class MyHandler implements ClickHandler, KeyUpHandler {
-      /**
-       * Fired when the user clicks on the sendButton.
-       */
-      public void onClick(ClickEvent event) {
-        sendNameToServer();
-      }
+		// West panel
+		cpWest.setHeaderVisible(false);
 
-      /**
-       * Fired when the user types in the nameField.
-       */
-      public void onKeyUp(KeyUpEvent event) {
-        if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
-          sendNameToServer();
-        }
-      }
+		BorderLayoutData westBorderLayOutData = new BorderLayoutData(.07);
+		VerticalLayoutContainer vp = new VerticalLayoutContainer();
+		VerticalLayoutData vldOp = new VerticalLayoutData(-1, -1, new Margins(0));
 
-      /**
-       * Send the name from the nameField to the server and wait for a response.
-       */
-      private void sendNameToServer() {
-        // First, we validate the input.
-        errorLabel.setText("");
-        String textToServer = nameField.getText();
-        if (!FieldVerifier.isValidName(textToServer)) {
-          errorLabel.setText("Please enter at least four characters");
-          return;
-        }
-        
-        // Then, we send the input to the server.
-        sendButton.setEnabled(false);
-        textToServerLabel.setText(textToServer);
-        serverResponseLabel.setText("");
-        greetingService.greetServer(textToServer, new AsyncCallback<String>() {
-          public void onFailure(Throwable caught) {
-            // Show the RPC error message to the user
-            dialogBox.setText("Remote Procedure Call - Failure");
-            serverResponseLabel.addStyleName("serverResponseLabelError");
-            serverResponseLabel.setHTML(SERVER_ERROR);
-            dialogBox.center();
-            closeButton.setFocus(true);
-          }
+		for (String op : buttonsOp) {
+			TextButton auxButton = new TextButton(op, calcHandler);
+			auxButton.setWidth("100%");
+			vp.add(auxButton, vldOp);
+		}
 
-          public void onSuccess(String result) {
-            dialogBox.setText("Remote Procedure Call");
-            serverResponseLabel.removeStyleName("serverResponseLabelError");
-            serverResponseLabel.setHTML(result);
-            dialogBox.center();
-            closeButton.setFocus(true);
-          }
-        });
-      }
-    }
+		convertNumberButton.setWidth("100%");
+		vp.add(convertNumberButton, vldOp);
+		cpWest.add(vp);
 
-    // Add a handler to send the name to the server
-    MyHandler handler = new MyHandler();
-    sendButton.addClickHandler(handler);
-    nameField.addKeyUpHandler(handler);
-  }
+		// Center Panel
+		cpCenter.add(tableNumbers);
+		cpCenter.setHeaderVisible(false);
+		BorderLayoutData centerBorderLayOutData = new BorderLayoutData(.01);
+		centerBorderLayOutData.setMargins(new Margins(0));
+		centerBorderLayOutData.setCollapsible(false);
+		centerBorderLayOutData.setSplit(false);
+
+		tableNumbers.getElement().getStyle().setProperty("color", "red");
+
+		tableNumbers.setCellSpacing(0);
+		tableNumbers.setCellPadding(0);
+
+		for (int i = 1; i < 10; i++) {
+			int numRow = ((i - 1) / 3);
+			int numCol = ((i % 3 == 0) ? 2 : (i % 3) - 1);
+			TextButton auxButtonNumber = new TextButton(String.valueOf(i), calcHandler);
+
+			tableNumbers.setWidget(numRow, numCol, auxButtonNumber);
+		}
+
+		tableNumbers.setWidget(4, 0, new TextButton("0", calcHandler));
+		tableNumbers.setWidget(4, 1, new TextButton(".", calcHandler));
+		cpCenter.add(tableNumbers);
+
+		borderLayoutContainer.setWestWidget(cpWest, westBorderLayOutData);
+		borderLayoutContainer.setNorthWidget(cpNorth, northBorderLayOutData);
+		borderLayoutContainer.setCenterWidget(cpCenter, centerBorderLayOutData);
+
+		Viewport v = new Viewport();
+		v.add(borderLayoutContainer);
+
+		RootPanel.get("errorLabelContainer").add(errorLabel);
+		if(Window.Location.getParameter("debug") == "1") RootPanel.get("errorLabelContainer").add(debugInfo);
+		RootPanel.get("calcContainer").add(v);
+
+		// Add a handler to send the number to the server
+		convertNumberButton.addSelectHandler((SelectHandler) calcHandler);
+
+	}
 }

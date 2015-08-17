@@ -7,13 +7,13 @@
 
   <!-- Servlets -->
   <servlet>
-    <servlet-name>greetServlet</servlet-name>
-    <servlet-class>es.josealmela.BasicMathCalculator.server.GreetingServiceImpl</servlet-class>
+    <servlet-name>convertNumberServlet</servlet-name>
+    <servlet-class>es.josealmela.BasicMathCalculator.server.ConverNumberServiceImpl</servlet-class>
   </servlet>
   
   <servlet-mapping>
-    <servlet-name>greetServlet</servlet-name>
-    <url-pattern>/basicmathcalculator/greet</url-pattern>
+    <servlet-name>convertNumberServlet</servlet-name>
+    <url-pattern>/basicmathcalculator/convertNumber</url-pattern>
   </servlet-mapping>
   
   <!-- Default page to serve -->
