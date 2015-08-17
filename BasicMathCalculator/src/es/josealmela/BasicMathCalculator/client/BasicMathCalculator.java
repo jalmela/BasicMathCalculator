@@ -191,13 +191,16 @@ public class BasicMathCalculator implements EntryPoint {
 		centerBorderLayOutData.setCollapsible(false);
 		centerBorderLayOutData.setSplit(false);
 		
-		//table.getElement().getStyle().setProperty("margin", "10px");
+		table.getElement().getStyle().setProperty("color", "red");
+		
 		table.setCellSpacing(0);
-		table.setCellPadding(0);			
+		table.setCellPadding(0);	
+
 		for (int i = 1; i < 10; i++) {
 			int numRow = ((i-1)/3);
 			int numCol = ((i % 3 == 0)? 2 : (i% 3) - 1);
-			TextButton auxButtonNumber = new TextButton(String.valueOf(i), calcHandler);		
+			TextButton auxButtonNumber = new TextButton(String.valueOf(i), calcHandler);
+			
 			table.setWidget(numRow, numCol, auxButtonNumber);
 		}
 		
