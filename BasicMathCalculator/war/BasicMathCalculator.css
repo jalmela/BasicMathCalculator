@@ -30,3 +30,6 @@ table {
 	max-height: 150px;
 	font-size:1.4em;	
 }
+
+dd {font-weight: bold;}
+dt {font-style: italic;}

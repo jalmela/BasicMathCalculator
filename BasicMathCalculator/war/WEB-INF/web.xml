@@ -16,6 +16,16 @@
     <url-pattern>/basicmathcalculator/convertNumber</url-pattern>
   </servlet-mapping>
   
+   <servlet>
+    <servlet-name>retrieveDataStoreServlet</servlet-name>
+    <servlet-class>es.josealmela.BasicMathCalculator.server.DataStoreViewerServiceImpl</servlet-class>
+  </servlet>
+  
+  <servlet-mapping>
+    <servlet-name>retrieveDataStoreServlet</servlet-name>
+    <url-pattern>/basicmathcalculator/retrieveDataStore</url-pattern>
+  </servlet-mapping>
+  
   <!-- Default page to serve -->
   <welcome-file-list>
     <welcome-file>BasicMathCalculator.html</welcome-file>
