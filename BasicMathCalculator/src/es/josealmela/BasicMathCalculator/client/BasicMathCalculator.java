@@ -35,11 +35,13 @@ public class BasicMathCalculator implements EntryPoint {
 
 	/**
 	 * Create a remote service proxy to talk to the server-side convert number
-	 * service.
+	 * service and view data store.
 	 */
 	private final ConverNumberServiceAsync convertNumberService = (ConverNumberServiceAsync) GWT
 			.create(ConverNumberService.class);
-
+	private final DataStoreViewerServiceAsync dataStoreViewerService = (DataStoreViewerServiceAsync) GWT
+			.create(DataStoreViewerService.class);
+	
 	final TextButton convertNumberButton = new TextButton("Convert to binary");
 	final TextField calcOpField = new TextField();
 	final Label errorLabel = new Label();
@@ -97,6 +99,7 @@ public class BasicMathCalculator implements EntryPoint {
 
 	private void showMessage(String title, String body) {
 		AlertMessageBox messageBox = new AlertMessageBox(title, body);
+		
 		messageBox.show();
 		messageBox.center();
 	}
@@ -251,7 +254,8 @@ public class BasicMathCalculator implements EntryPoint {
 		ContentPanel cpNorth = new ContentPanel();
 		ContentPanel cpWest = new ContentPanel();
 		ContentPanel cpCenter = new ContentPanel();
-
+		final TextButton btnViewDataStore = new TextButton("View Datastore");
+		
 		calcOpField.setReadOnly(true);
 		convertNumberButton.setId("convertNumberOp");
 
@@ -292,7 +296,6 @@ public class BasicMathCalculator implements EntryPoint {
 		centerBorderLayOutData.setSplit(false);
 
 		tableNumbers.getElement().getStyle().setProperty("color", "red");
-
 		tableNumbers.setCellSpacing(0);
 		tableNumbers.setCellPadding(0);
 
@@ -314,13 +317,43 @@ public class BasicMathCalculator implements EntryPoint {
 
 		Viewport v = new Viewport();
 		v.add(borderLayoutContainer);
-
+		
 		RootPanel.get("errorLabelContainer").add(errorLabel);
 		if(Window.Location.getParameter("debug") == "1") RootPanel.get("errorLabelContainer").add(debugInfo);
 		RootPanel.get("calcContainer").add(v);
-
+		RootPanel.get("btnViewDataStoreContainer").add(btnViewDataStore);
 		// Add a handler to send the number to the server
 		convertNumberButton.addSelectHandler((SelectHandler) calcHandler);
+		
+		//Listen for mouse event. A Handler independent to calculator's events handler
+		btnViewDataStore.addSelectHandler(new SelectHandler() {
+			
+			public void onSelect(SelectEvent event) {
+				ObtainDataStore();				
+			}
+
+			private void ObtainDataStore() {
+
+				errorLabel.setText("");
+
+				// Then, we send the input to the server.
+				btnViewDataStore.setEnabled(false);
+				dataStoreViewerService.retrieveDataStoreServer(new AsyncCallback<String>() {
+					public void onFailure(Throwable caught) {
+						// Show the RPC error message to the user
+						showMessage("An error ocurred in RPC retrieveDataStore", SERVER_ERROR);
+						btnViewDataStore.setEnabled(true);
+					}
+
+					public void onSuccess(String result) {					
+						showMessage("Data store viewe", result);
+						btnViewDataStore.setEnabled(true);
+					}
+					
+				});
+				
+			}
+		});
 
 	}
 }

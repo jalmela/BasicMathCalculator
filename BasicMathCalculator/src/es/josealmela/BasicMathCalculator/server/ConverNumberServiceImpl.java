@@ -2,7 +2,6 @@ package es.josealmela.BasicMathCalculator.server;
 import es.josealmela.BasicMathCalculator.server.PMF;
 
 import java.util.Date;
-
 import javax.jdo.PersistenceManager;
 import es.josealmela.BasicMathCalculator.client.ConverNumberService;
 import es.josealmela.BasicMathCalculator.shared.FieldVerifier;
@@ -29,7 +28,7 @@ public class ConverNumberServiceImpl extends RemoteServiceServlet implements
     res =Integer.toBinaryString(Integer.parseInt(input));
     
     try {
-    	
+    	//Save in Data Store
         pm.makePersistent(new BaseConversion(input, res, new Date()));
     } finally {
     	if(!pm.isClosed()) pm.close();
