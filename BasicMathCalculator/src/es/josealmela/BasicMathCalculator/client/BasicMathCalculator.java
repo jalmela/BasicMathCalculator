@@ -42,10 +42,18 @@ public class BasicMathCalculator implements EntryPoint {
 	private final DataStoreViewerServiceAsync dataStoreViewerService = (DataStoreViewerServiceAsync) GWT
 			.create(DataStoreViewerService.class);
 	
-	final TextButton convertNumberButton = new TextButton("Convert to binary");
+	final TextButton convertNumberButton = new TextButton("Convert to bin");
 	final TextField calcOpField = new TextField();
 	final Label errorLabel = new Label();
 	final Label debugInfo = new Label();
+	final TextButton btnViewDataStore = new TextButton("View Datastore");
+	
+	final BorderLayoutContainer borderLayoutContainer = new BorderLayoutContainer();
+	FlexTable tableNumbers = new FlexTable();
+	ContentPanel cpNorth = new ContentPanel();
+	ContentPanel cpCenter = new ContentPanel();
+	Viewport v = new Viewport();
+	
 	public String firstOperand;
 	public String secondOperand;
 	public String operator;
@@ -179,7 +187,7 @@ public class BasicMathCalculator implements EntryPoint {
 		public void onSelect(SelectEvent event) {
 			TextButton btn = (TextButton) event.getSource();
 			String lastInput = btn.getText();
-			if (lastInput.equals("Convert to binary")) {
+			if (lastInput.equals("Convert to bin")) {
 				if (!getDisplay().equals(""))
 					sendNumberToServer();
 				
@@ -249,79 +257,90 @@ public class BasicMathCalculator implements EntryPoint {
 	public void onModuleLoad() {
 		MyCalcHandlers calcHandler = new MyCalcHandlers();
 
-		final BorderLayoutContainer borderLayoutContainer = new BorderLayoutContainer();
-		FlexTable tableNumbers = new FlexTable();
-		ContentPanel cpNorth = new ContentPanel();
-		ContentPanel cpWest = new ContentPanel();
-		ContentPanel cpCenter = new ContentPanel();
-		final TextButton btnViewDataStore = new TextButton("View Datastore");
-		
 		calcOpField.setReadOnly(true);
+		calcOpField.setId("calcOpField");
 		convertNumberButton.setId("convertNumberOp");
 
 		// North panel
-		BorderLayoutData northBorderLayOutData = new BorderLayoutData(.03);
-
+		BorderLayoutData northBorderLayOutData = new BorderLayoutData();
+		BorderLayoutData centerBorderLayOutData = new BorderLayoutData(.01);
 		cpNorth.setHeadingText("Result");
 		cpNorth.setHeaderVisible(false);
+		cpNorth.setId("pnlNorth");
 		cpNorth.add(calcOpField);
 
 		// northBorderLayOutData.setMargins(new Margins(0, 5, 0, 0));
 		northBorderLayOutData.setCollapsible(false);
 		northBorderLayOutData.setSplit(false);
 
-		// West panel
-		cpWest.setHeaderVisible(false);
-
-		BorderLayoutData westBorderLayOutData = new BorderLayoutData(.07);
-		VerticalLayoutContainer vp = new VerticalLayoutContainer();
-		VerticalLayoutData vldOp = new VerticalLayoutData(-1, -1, new Margins(0));
-
-		for (String op : buttonsOp) {
-			TextButton auxButton = new TextButton(op, calcHandler);
-			auxButton.setWidth("100%");
-			vp.add(auxButton, vldOp);
-		}
-
-		convertNumberButton.setWidth("100%");
-		vp.add(convertNumberButton, vldOp);
-		cpWest.add(vp);
-
 		// Center Panel
 		cpCenter.add(tableNumbers);
 		cpCenter.setHeaderVisible(false);
-		BorderLayoutData centerBorderLayOutData = new BorderLayoutData(.01);
+		
 		centerBorderLayOutData.setMargins(new Margins(0));
 		centerBorderLayOutData.setCollapsible(false);
 		centerBorderLayOutData.setSplit(false);
 
 		tableNumbers.getElement().getStyle().setProperty("color", "red");
-		tableNumbers.setCellSpacing(0);
+		tableNumbers.setCellSpacing(4);
 		tableNumbers.setCellPadding(0);
 
 		for (int i = 1; i < 10; i++) {
 			int numRow = ((i - 1) / 3);
 			int numCol = ((i % 3 == 0) ? 2 : (i % 3) - 1);
 			TextButton auxButtonNumber = new TextButton(String.valueOf(i), calcHandler);
-
+			auxButtonNumber.setWidth(80);
+			auxButtonNumber.setHeight(80);
 			tableNumbers.setWidget(numRow, numCol, auxButtonNumber);
 		}
+		
+		for (int i = 0; i < buttonsOp.length; i++) {
+			String op = buttonsOp[i];
+			int numRow = ((i) / 3);
+			int numCol = ((i % 3 == 0) ? 3 : (i % 3) + 3);
+			//{ "C", "CE", "X", "+", "-", "/", "%", "+/-", "=" }
+			TextButton auxButton = new TextButton(op, calcHandler);
+			auxButton.setWidth(80);
+			auxButton.setHeight(80);
+			
+			tableNumbers.setWidget(numRow, numCol, auxButton);			
+		}
+		
 
-		tableNumbers.setWidget(4, 0, new TextButton("0", calcHandler));
-		tableNumbers.setWidget(4, 1, new TextButton(".", calcHandler));
+		
+		TextButton auxButton = new TextButton("0", calcHandler);
+		auxButton.setWidth(80);
+		auxButton.setHeight(80);
+		tableNumbers.setWidget(3, 0,  auxButton);
+		auxButton = new TextButton(".", calcHandler);
+		auxButton.setWidth(80);
+		auxButton.setHeight(80);
+		tableNumbers.setWidget(3, 1,auxButton);
+		btnViewDataStore.setWidth(80);
+		btnViewDataStore.setHeight(80);
+		tableNumbers.setWidget(3, 2, btnViewDataStore);
+		convertNumberButton.setWidth(80);
+		convertNumberButton.setHeight(80);
+		tableNumbers.setWidget(3, 3, convertNumberButton);
+		
+		
 		cpCenter.add(tableNumbers);
 
-		borderLayoutContainer.setWestWidget(cpWest, westBorderLayOutData);
 		borderLayoutContainer.setNorthWidget(cpNorth, northBorderLayOutData);
 		borderLayoutContainer.setCenterWidget(cpCenter, centerBorderLayOutData);
 
-		Viewport v = new Viewport();
+		
+		//v.setWidth(500);
+		cpNorth.setPixelSize(200, 50);
+		cpCenter.setPixelSize(200, 300);
+		borderLayoutContainer.setPixelSize(200,300);
+		v.setPixelSize(400, 300);
 		v.add(borderLayoutContainer);
 		
 		RootPanel.get("errorLabelContainer").add(errorLabel);
 		if(Window.Location.getParameter("debug") == "1") RootPanel.get("errorLabelContainer").add(debugInfo);
 		RootPanel.get("calcContainer").add(v);
-		RootPanel.get("btnViewDataStoreContainer").add(btnViewDataStore);
+		//RootPanel.get("btnViewDataStoreContainer").add(btnViewDataStore);
 		// Add a handler to send the number to the server
 		convertNumberButton.addSelectHandler((SelectHandler) calcHandler);
 		
