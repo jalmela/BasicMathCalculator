@@ -47,6 +47,7 @@ public class BasicMathCalculator implements EntryPoint {
 	public String firstOperand;
 	public String secondOperand;
 	public String operator;
+	public boolean previousWasOp = false;
 	private boolean isShowingPrevResult = false;
 	String buttonsOp[] = { "C", "CE", "X", "+", "-", "/", "%", "+/-", "=" };
 	String implementedOp[] = { "X", "+", "-", "/", "%" };
@@ -90,8 +91,8 @@ public class BasicMathCalculator implements EntryPoint {
 		this.calcOpField.setText(this.calcOpField.getText() + number);
 	}
 
-	private boolean isAnImplementedOperation(String opeator) {
-		return Arrays.asList(this.implementedOp).contains(opeator);
+	private boolean isAnImplementedOperation(String operator) {
+		return Arrays.asList(this.implementedOp).contains(operator);
 	}
 
 	private void showMessage(String title, String body) {
@@ -174,23 +175,24 @@ public class BasicMathCalculator implements EntryPoint {
 
 		public void onSelect(SelectEvent event) {
 			TextButton btn = (TextButton) event.getSource();
-			String txt = btn.getText();
-			if (txt.equals("Convert to binary")) {
+			String lastInput = btn.getText();
+			if (lastInput.equals("Convert to binary")) {
 				if (!getDisplay().equals(""))
 					sendNumberToServer();
-			} else if (txt.equals("C")) {
+				
+			} else if (lastInput.equals("C")) {
 				resetCurrentOp();
 				clearDisplay();
-			} else if (txt.equals("CE")) {
+			} else if (lastInput.equals("CE")) {
 
 				clearDisplay();
 
-			} else if (txt.equals("+/-")) {
+			} else if (lastInput.equals("+/-")) {
 				if (getDisplay().equals("") || getDisplay().charAt(0) != '-')
 					setDisplay("-" + getDisplay());
 				else
 					setDisplay(getDisplay().replace("-", ""));
-			} else if (txt.equals("=")) {
+			} else if (lastInput.equals("=")) {
 
 				if (isSetFirstOp() && isSetOperator() && isNumeric(getDisplay())) {
 					secondOperand = getDisplay();
@@ -199,33 +201,41 @@ public class BasicMathCalculator implements EntryPoint {
 					isShowingPrevResult = true;
 				}
 
-			} else if (txt.equals(".")) {
+			} else if (lastInput.equals(".")) {
 				//Always preserve the display
 				isShowingPrevResult = false;
 				if (getDisplay().equals(""))
 					setDisplay("0.");
 				else if (!getDisplay().contains("."))
 					appendToDisplay(".");
-			} else if (Character.isDigit(txt.charAt(0))) {
-				if(isShowingPrevResult) {setDisplay(txt);}
-				else appendToDisplay(txt);
+			} else if (Character.isDigit(lastInput.charAt(0))) {
+				if(isShowingPrevResult) {setDisplay(lastInput);}
+				else appendToDisplay(lastInput);
 			} else {
-
-				if (isAnImplementedOperation(txt) && isNumeric(getDisplay()) && isSetFirstOp()) {
-					secondOperand = getDisplay();
-					operator = txt;
-					acumulateInfirstOp();
-					clearDisplay();
-					
-
-				} else if (isAnImplementedOperation(txt) && isNumeric(getDisplay())) {
-					firstOperand = getDisplay();
-					operator = txt;
-					clearDisplay();
-				}
+				//If user click two operators we will change the operation to  perform
+				if(previousWasOp) operator = lastInput;
+				else
+					if (isAnImplementedOperation(lastInput) && isNumeric(getDisplay()) && isSetFirstOp()) {
+						
+						secondOperand = getDisplay();
+						 
+						setDisplay(String.valueOf(acumulateInfirstOp()));
+						isShowingPrevResult = true;
+						operator = lastInput;
+	
+					} else if (isAnImplementedOperation(lastInput) && isNumeric(getDisplay())) {
+						firstOperand = getDisplay();
+						operator = lastInput;
+						clearDisplay();
+					}
 
 			}
-			debugInfo.setText("ACTION: " + txt + " op1: " + firstOperand + " op2: " + secondOperand + " operation: "
+			debugInfo(lastInput);
+			previousWasOp = isAnImplementedOperation(lastInput);
+		}
+
+		private void debugInfo(String lastInput) {
+			debugInfo.setText("ACTION: " + lastInput + " op1: " + firstOperand + " op2: " + secondOperand + " operation: "
 					+ operator + "isNumericDisplay: " + isNumeric(getDisplay()));
 		}
 	}
